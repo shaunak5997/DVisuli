@@ -11,7 +11,7 @@ from datetime import datetime
 from app.models import Sale, Base
 from app.database import SessionLocal, engine
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, distinct
 import logging
 
 # Configure logging
@@ -284,12 +284,15 @@ async def get_task(task_name: str):
 
 @app.get("/tasks")
 async def get_tasks():
-    """Get all tasks"""
+    """Get all unique task names from the sales table"""
     try:
         db = SessionLocal()
         try:
-            # Get unique task names
-            tasks = db.query(Sale.task_name, func.count(Sale.sale_id).label('record_count')).group_by(Sale.task_name).all()
+            # Get unique task names with their record counts
+            tasks = db.query(
+                Sale.task_name,
+                func.count(Sale.sale_id).label('record_count')
+            ).group_by(Sale.task_name).all()
             
             return {
                 "tasks": [
@@ -306,6 +309,93 @@ async def get_tasks():
             
     except Exception as e:
         logger.error(f"Error getting tasks: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/tasks/{task_name}/analytics")
+async def show_analytics(task_name: str):
+    """Get analytics data for a specific task"""
+    try:
+        db = SessionLocal()
+        try:
+            # Get all sales for this task
+            sales = db.query(Sale).filter(Sale.task_name == task_name).all()
+            
+            if not sales:
+                raise HTTPException(status_code=404, detail="No data found for this task")
+            
+            # Convert to dict format and remove SQLAlchemy internal state
+            sales_data = []
+            for sale in sales:
+                sale_dict = sale.__dict__
+                sale_dict.pop('_sa_instance_state', None)
+                sales_data.append(sale_dict)
+            
+            # Calculate summary statistics
+            total_sales = len(sales_data)
+            total_revenue = sum(float(sale.get('price', 0)) for sale in sales_data)
+            avg_price = total_revenue / total_sales if total_sales > 0 else 0
+            
+            # Aggregate data for company bar chart
+            company_aggregation = {}
+            for sale in sales_data:
+                company = sale.get('company', 'Unknown')
+                if company not in company_aggregation:
+                    company_aggregation[company] = {
+                        'count': 0,
+                        'total_revenue': 0
+                    }
+                company_aggregation[company]['count'] += 1
+                company_aggregation[company]['total_revenue'] += float(sale.get('price', 0))
+            
+            # Convert company aggregation to list format for D3.js
+            company_chart_data = [
+                {
+                    'company': company,
+                    'count': data['count'],
+                    'total_revenue': round(data['total_revenue'], 2)
+                }
+                for company, data in company_aggregation.items()
+            ]
+            
+            # Aggregate data for car model bar chart
+            model_aggregation = {}
+            for sale in sales_data:
+                model = sale.get('car_model', 'Unknown')
+                if model not in model_aggregation:
+                    model_aggregation[model] = {
+                        'count': 0,
+                        'total_revenue': 0
+                    }
+                model_aggregation[model]['count'] += 1
+                model_aggregation[model]['total_revenue'] += float(sale.get('price', 0))
+            
+            # Convert model aggregation to list format for D3.js
+            model_chart_data = [
+                {
+                    'model': model,
+                    'count': data['count'],
+                    'total_revenue': round(data['total_revenue'], 2)
+                }
+                for model, data in model_aggregation.items()
+            ]
+            
+            return {
+                "task_name": task_name,
+                "summary": {
+                    "total_sales": total_sales,
+                    "total_revenue": round(total_revenue, 2),
+                    "average_price": round(avg_price, 2)
+                },
+                "company_chart_data": company_chart_data,
+                "model_chart_data": model_chart_data,
+                "sales_data": sales_data
+            }
+            
+        finally:
+            db.close()
+            
+    except Exception as e:
+        logger.error(f"Error getting analytics for task {task_name}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

@@ -195,3 +195,304 @@ h2 {
     min-height: 400px;
     margin-top: 20px;
 }
+
+/* Task History Pane */
+.task-history-pane {
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-top: 30px;
+    border-radius: 10px;
+}
+
+.task-history-header {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.task-history-header h3 {
+    font-size: 1.2rem;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.task-history-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.task-history-item {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.task-history-item h4 {
+    font-size: 1rem;
+    margin-bottom: 8px;
+    color: #2c3e50;
+}
+
+.task-history-item p {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    margin-bottom: 8px;
+}
+
+.task-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-completed {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-failed {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.task-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.task-actions .btn {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.task-actions .btn i {
+    font-size: 1rem;
+}
+
+/* Analytics Styles */
+.analytics-container {
+    width: 100%;
+    max-width: 100%;
+    padding: 20px;
+}
+
+.analytics-summary .card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.analytics-summary .card:hover {
+    transform: translateY(-5px);
+}
+
+.analytics-summary .card-title {
+    color: #7f8c8d;
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+.analytics-summary .card-text {
+    color: #2c3e50;
+    font-weight: 600;
+    margin: 0;
+}
+
+.analytics-distribution h4,
+.analytics-data h4 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+}
+
+.table-responsive {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 30px;
+    width: 100%;
+}
+
+.chart-card h4 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.2rem;
+}
+
+.chart {
+    width: 100%;
+    height: 400px;
+    margin-bottom: 20px;
+}
+
+.bar {
+    transition: fill 0.3s ease;
+}
+
+.value-label {
+    font-size: 12px;
+    fill: #2c3e50;
+}
+
+/* Ensure charts are responsive */
+@media (max-width: 768px) {
+    .chart {
+        height: 300px;
+    }
+    
+    .chart-card {
+        padding: 15px;
+    }
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.chart-filters {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-group label {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    margin: 0;
+}
+
+.filter-group .form-select,
+.filter-group .form-control {
+    min-width: 120px;
+    font-size: 0.9rem;
+}
+
+/* Make filters responsive */
+@media (max-width: 768px) {
+    .chart-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+
+    .chart-filters {
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .filter-group {
+        flex: 1 1 calc(50% - 10px);
+        min-width: 150px;
+    }
+}
+
+.chart-tooltip {
+    position: absolute;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 4px;
+    font-size: 14px;
+    pointer-events: none;
+    z-index: 1000;
+    transition: opacity 0.2s;
+}
+
+.chart-tooltip strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #3498db;
+}
+
+.bar {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.bar.selected {
+    fill: #2ecc71 !important;
+    stroke: #27ae60 !important;
+    stroke-width: 2px !important;
+}
+
+.table tbody tr {
+    transition: background-color 0.3s ease;
+}
+
+.table tbody tr.highlighted {
+    background-color: rgba(52, 152, 219, 0.1) !important;
+}
+
+/* Add animation for bar transitions */
+.bar {
+    transition: all 0.3s ease;
+}
+
+/* Add hover effect for the entire chart */
+.chart-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chart-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Style for active filters */
+.filter-group .form-select:focus,
+.filter-group .form-control:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+/* Add a subtle animation for value labels */
+.value-label {
+    transition: opacity 0.3s ease;
+}
+
+.bar:hover + .value-label {
+    opacity: 0.8;
+}
