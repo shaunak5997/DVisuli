@@ -366,12 +366,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="analytics-container">
                         <div id="analyticsContainer">
                             <div class="charts-container">
-                                <div id="companyChart" class="chart"></div>
-                                <div id="monthlyChart" class="chart"></div>
+                                <div id="companyChart" class="chart">
+                                    <div id="companyTooltip" class="tooltip"></div>
+                                </div>
+                                <div id="monthlyChart" class="chart">
+                                    <div id="monthlyTooltip" class="tooltip"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div id="tooltip"></div>
                 `;
                 
                 // Insert before the task history pane
@@ -398,8 +401,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const chartsContainer = document.createElement('div');
             chartsContainer.className = 'charts-container';
             chartsContainer.innerHTML = `
-                <div id="companyChart" class="chart"></div>
-                <div id="monthlyChart" class="chart"></div>
+                <div id="companyChart" class="chart">
+                    <div id="companyTooltip" class="tooltip"></div>
+                </div>
+                <div id="monthlyChart" class="chart">
+                    <div id="monthlyTooltip" class="tooltip"></div>
+                </div>
             `;
             container.appendChild(chartsContainer);
             
@@ -729,8 +736,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         .attr("r", 8)
                         .attr("fill", "#3498db");
                     
-                    // Show tooltip
-                    const tooltip = d3.select("#tooltip");
+                    // Get the position of the current dot
+                    const circle = this.getBoundingClientRect();
+                    const containerRect = container.getBoundingClientRect();
+                    
+                    // Show tooltip using the monthly-specific tooltip
+                    const tooltip = d3.select("#monthlyTooltip");
                     tooltip.style("opacity", 1)
                         .html(`
                             <strong>${d[xKey]}</strong><br>
@@ -738,14 +749,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             Total Revenue: $${d.total_revenue.toLocaleString()}<br>
                             Number of Sales: ${d.count}
                         `)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 10) + "px");
+                        .style("left", (circle.left + circle.width/2 - containerRect.left) + "px")
+                        .style("top", (circle.top - containerRect.top - 70) + "px");
                 })
                 .on("mouseout", function() {
                     d3.select(this)
                         .attr("r", 5)
                         .attr("fill", color);
-                    d3.select("#tooltip").style("opacity", 0);
+                    d3.select("#monthlyTooltip").style("opacity", 0);
                 });
         } else {
             // Add bars for company data
@@ -761,10 +772,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 .attr("fill", color)
                 .on("mouseover", function(event, d) {
                     d3.select(this)
-                        .attr("fill", "#4caf50");
+                        .attr("fill", "#2ecc71");
                     
-                    // Show tooltip
-                    const tooltip = d3.select("#tooltip");
+                    // Get the position of the current bar
+                    const rect = this.getBoundingClientRect();
+                    const containerRect = container.getBoundingClientRect();
+                    
+                    // Show tooltip using the company-specific tooltip
+                    const tooltip = d3.select("#companyTooltip");
                     tooltip.style("opacity", 1)
                         .html(`
                             <strong>${d[xKey]}</strong><br>
@@ -772,13 +787,13 @@ document.addEventListener('DOMContentLoaded', function() {
                             Total Revenue: $${d.total_revenue.toLocaleString()}<br>
                             Average Price: $${(d.total_revenue / d[yKey]).toLocaleString()}
                         `)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 10) + "px");
+                        .style("left", (rect.left + rect.width/2 - containerRect.left) + "px")
+                        .style("top", (rect.top - containerRect.top - 70) + "px");
                 })
                 .on("mouseout", function() {
                     d3.select(this)
                         .attr("fill", color);
-                    d3.select("#tooltip").style("opacity", 0);
+                    d3.select("#companyTooltip").style("opacity", 0);
                 });
         }
     }

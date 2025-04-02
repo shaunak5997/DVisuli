@@ -429,198 +429,59 @@ h2 {
     }
 }
 
-.chart-tooltip {
+.tooltip {
     position: absolute;
     padding: 10px;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
+    background: rgba(44, 62, 80, 0.9);
+    color: #fff;
     border-radius: 4px;
     font-size: 14px;
     pointer-events: none;
+    opacity: 0;
     z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    max-width: 300px;
     transition: opacity 0.2s;
 }
 
-.chart-tooltip strong {
+.tooltip strong {
     display: block;
     margin-bottom: 5px;
-    color: #3498db;
-}
-
-.bar {
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.bar.selected {
-    fill: #2ecc71 !important;
-    stroke: #27ae60 !important;
-    stroke-width: 2px !important;
-}
-
-.table tbody tr {
-    transition: background-color 0.3s ease;
-}
-
-.table tbody tr.highlighted {
-    background-color: rgba(52, 152, 219, 0.1) !important;
-}
-
-/* Add animation for bar transitions */
-.bar {
-    transition: all 0.3s ease;
-}
-
-/* Add hover effect for the entire chart */
-.chart-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.chart-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* Style for active filters */
-.filter-group .form-select:focus,
-.filter-group .form-control:focus {
-    border-color: #3498db;
-    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
-}
-
-/* Add a subtle animation for value labels */
-.value-label {
-    transition: opacity 0.3s ease;
-}
-
-.bar:hover + .value-label {
-    opacity: 0.8;
-}
-
-.charts-container {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 3rem;
-    padding: 3rem;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin: 3rem auto;
-    max-width: 1400px;
-}
-
-.chart {
-    background: #fff;
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: visible;
-    display: flex;
-    flex-direction: column;
-    min-height: 500px;
-}
-
-.chart svg {
-    flex: 1;
-    min-height: 450px;
-    margin-top: 1rem;
-    position: relative;
-    z-index: 1;
-}
-
-/* Chart specific styles */
-.bar {
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.bar:hover {
-    fill: #2ecc71;
-    filter: brightness(1.1);
-}
-
-.dot {
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.dot:hover {
-    r: 8;
-    fill: #3498db;
-    filter: brightness(1.1);
-}
-
-/* Tooltip styles */
-#tooltip {
-    position: fixed;
-    padding: 12px;
-    background: rgba(0, 0, 0, 0.8);
     color: #fff;
-    border-radius: 6px;
     font-size: 14px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 9999;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    max-width: 300px;
 }
 
-#tooltip::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: -8px;
-    transform: translateY(-50%);
-    border-width: 8px 8px 8px 0;
-    border-style: solid;
-    border-color: transparent rgba(0, 0, 0, 0.8) transparent transparent;
-}
-
-#tooltip strong {
-    display: block;
-    margin-bottom: 5px;
-    color: #3498db;
-}
-
-#tooltip br {
+.tooltip br {
     display: block;
     margin: 3px 0;
 }
 
-/* Ensure tooltip is visible on top of other elements */
+.chart {
+    background: #fff;
+    padding: 10px;
+    border-radius: 4px;
+    min-height: 300px;
+    position: relative;
+    overflow: visible !important;
+}
+
+.charts-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+    position: relative;
+    overflow: visible !important;
+}
+
 .analytics-section {
     background: #fff;
-    padding: 20px;
+    padding: 15px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-}
-
-.analytics-header {
-    padding-bottom: 15px;
-    border-bottom: 1px solid #eee;
-}
-
-.analytics-header h3 {
-    color: #2c3e50;
-    font-size: 1.5rem;
-}
-
-.analytics-header .btn-close {
-    padding: 0.5rem;
-    transition: opacity 0.2s;
-}
-
-.analytics-header .btn-close:hover {
-    opacity: 0.7;
-}
-
-.chart {
+    margin-bottom: 15px;
     position: relative;
-    z-index: 1;
+    overflow: visible !important;
 }
 
 /* Chart axis styles */
@@ -766,4 +627,14 @@ h2 {
 /* Make sure the chart container doesn't clip the filters */
 .chart {
     overflow: visible !important;
+}
+
+/* Ensure tooltips are properly positioned relative to their charts */
+#companyChart, #monthlyChart {
+    position: relative;
+}
+
+#companyTooltip, #monthlyTooltip {
+    position: absolute;
+    pointer-events: none;
 }
