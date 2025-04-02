@@ -1,0 +1,242 @@
+[
+  {
+    "saleId": "SA-10001",
+    "company": "Tesla",
+    "car_model": "Model 3",
+    "manufacturingYear": 2023,
+    "price": 52990,
+    "salesLocation": "San Francisco"
+  },
+  {
+    "saleId": "SA-10002",
+    "company": "Audi",
+    "car_model": "Q5",
+    "manufacturingYear": 2022,
+    "price": 47800,
+    "salesLocation": "New York"
+  },
+  {
+    "saleId": "SA-10003",
+    "company": "Lexus",
+    "car_model": "RX",
+    "manufacturingYear": 2022,
+    "price": 53450,
+    "salesLocation": "Chicago"
+  },
+  {
+    "saleId": "SA-10004",
+    "company": "Hyundai",
+    "car_model": "Ioniq 5",
+    "manufacturingYear": 2023,
+    "price": 56500,
+    "salesLocation": "Los Angeles"
+  },
+  {
+    "saleId": "SA-10005",
+    "company": "Porsche",
+    "car_model": "911",
+    "manufacturingYear": 2021,
+    "price": 118900,
+    "salesLocation": "Miami"
+  },
+  {
+    "saleId": "SA-10006",
+    "company": "Rivian",
+    "car_model": "R1S",
+    "manufacturingYear": 2023,
+    "price": 90000,
+    "salesLocation": "Seattle"
+  },
+  {
+    "saleId": "SA-10007",
+    "company": "Volkswagen",
+    "car_model": "ID.4",
+    "manufacturingYear": 2022,
+    "price": 43995,
+    "salesLocation": "Austin"
+  },
+  {
+    "saleId": "SA-10008",
+    "company": "Subaru",
+    "car_model": "Outback",
+    "manufacturingYear": 2022,
+    "price": 38695,
+    "salesLocation": "Denver"
+  },
+  {
+    "saleId": "SA-10009",
+    "company": "Lucid",
+    "car_model": "Air",
+    "manufacturingYear": 2023,
+    "price": 139000,
+    "salesLocation": "Orange County"
+  },
+  {
+    "saleId": "SA-10010",
+    "company": "Kia",
+    "car_model": "EV6",
+    "manufacturingYear": 2022,
+    "price": 51200,
+    "salesLocation": "Boston"
+  },
+  {
+    "saleId": "SA-10011",
+    "company": "Volvo",
+    "car_model": "XC60",
+    "manufacturingYear": 2022,
+    "price": 53500,
+    "salesLocation": "Washington DC"
+  },
+  {
+    "saleId": "SA-10012",
+    "company": "Cadillac",
+    "car_model": "Lyriq",
+    "manufacturingYear": 2023,
+    "price": 59990,
+    "salesLocation": "Atlanta"
+  },
+  {
+    "saleId": "SA-10013",
+    "company": "BMW",
+    "car_model": "i4",
+    "manufacturingYear": 2022,
+    "price": 65900,
+    "salesLocation": "Dallas"
+  },
+  {
+    "saleId": "SA-10014",
+    "company": "Jaguar",
+    "car_model": "F-Pace",
+    "manufacturingYear": 2021,
+    "price": 82300,
+    "salesLocation": "Chicago"
+  },
+  {
+    "saleId": "SA-10015",
+    "company": "Genesis",
+    "car_model": "GV70",
+    "manufacturingYear": 2023,
+    "price": 54500,
+    "salesLocation": "Houston"
+  },
+  {
+    "saleId": "SA-10016",
+    "company": "Mazda",
+    "car_model": "CX-50",
+    "manufacturingYear": 2022,
+    "price": 41550,
+    "salesLocation": "Phoenix"
+  },
+  {
+    "saleId": "SA-10017",
+    "company": "Lincoln",
+    "car_model": "Aviator",
+    "manufacturingYear": 2023,
+    "price": 69190,
+    "salesLocation": "Philadelphia"
+  },
+  {
+    "saleId": "SA-10018",
+    "company": "Acura",
+    "car_model": "MDX",
+    "manufacturingYear": 2022,
+    "price": 66700,
+    "salesLocation": "San Diego"
+  },
+  {
+    "saleId": "SA-10019",
+    "company": "Alfa Romeo",
+    "car_model": "Stelvio",
+    "manufacturingYear": 2021,
+    "price": 81250,
+    "salesLocation": "Portland"
+  },
+  {
+    "saleId": "SA-10020",
+    "company": "Infiniti",
+    "car_model": "QX55",
+    "manufacturingYear": 2022,
+    "price": 52800,
+    "salesLocation": "Las Vegas"
+  },
+  {
+    "saleId": "SA-10021",
+    "company": "Tesla",
+    "car_model": "Model Y",
+    "manufacturingYear": 2023,
+    "price": 62990,
+    "salesLocation": "Denver"
+  },
+  {
+    "saleId": "SA-10022",
+    "company": "Maserati",
+    "car_model": "Levante",
+    "manufacturingYear": 2022,
+    "price": 153100,
+    "salesLocation": "Miami"
+  },
+  {
+    "saleId": "SA-10023",
+    "company": "Polestar",
+    "car_model": "Polestar 2",
+    "manufacturingYear": 2023,
+    "price": 51900,
+    "salesLocation": "San Francisco"
+  },
+  {
+    "saleId": "SA-10024",
+    "company": "Land Rover",
+    "car_model": "Defender",
+    "manufacturingYear": 2022,
+    "price": 85750,
+    "salesLocation": "New York"
+  },
+  {
+    "saleId": "SA-10025",
+    "company": "Audi",
+    "car_model": "e-tron GT",
+    "manufacturingYear": 2023,
+    "price": 142400,
+    "salesLocation": "Los Angeles"
+  },
+  {
+    "saleId": "SA-10026",
+    "company": "Toyota",
+    "car_model": "bZ4X",
+    "manufacturingYear": 2023,
+    "price": 48780,
+    "salesLocation": "Seattle"
+  },
+  {
+    "saleId": "SA-10027",
+    "company": "Bentley",
+    "car_model": "Bentayga",
+    "manufacturingYear": 2022,
+    "price": 245000,
+    "salesLocation": "Chicago"
+  },
+  {
+    "saleId": "SA-10028",
+    "company": "Nissan",
+    "car_model": "Ariya",
+    "manufacturingYear": 2023,
+    "price": 58950,
+    "salesLocation": "Austin"
+  },
+  {
+    "saleId": "SA-10029",
+    "company": "Mercedes-Benz",
+    "car_model": "EQS",
+    "manufacturingYear": 2022,
+    "price": 125900,
+    "salesLocation": "Boston"
+  },
+  {
+    "saleId": "SA-10030",
+    "company": "Lexus",
+    "car_model": "LX",
+    "manufacturingYear": 2023,
+    "price": 126700,
+    "salesLocation": "Washington DC"
+  }
+]

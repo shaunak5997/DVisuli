@@ -1,0 +1,31 @@
+saleId,company,car_model,manufacturingYear,price,salesLocation
+SA-20001,Ford,Mustang,2024,58950,Detroit
+SA-20002,Honda,Civic,2023,32450,Los Angeles
+SA-20003,Chevrolet,Bolt EUV,2024,39995,Seattle
+SA-20004,Toyota,Camry,2023,36425,Chicago
+SA-20005,Mercedes-Benz,S-Class,2022,114700,New York
+SA-20006,Kia,Telluride,2024,49990,Atlanta
+SA-20007,BMW,X5,2023,72500,Boston
+SA-20008,Jeep,Grand Cherokee,2024,68995,Denver
+SA-20009,Dodge,Challenger,2022,75250,Las Vegas
+SA-20010,Hyundai,Tucson,2024,38350,Portland
+SA-20011,Audi,A6,2023,62900,Dallas
+SA-20012,Subaru,Outback,2024,41995,Miami
+SA-20013,Volkswagen,ID.4,2023,47900,San Francisco
+SA-20014,Chrysler,Pacifica,2024,58995,Chicago
+SA-20015,Tesla,Model S,2023,129990,Washington DC
+SA-20016,Mazda,CX-90,2024,54925,Houston
+SA-20017,Acura,Integra,2023,37500,San Diego
+SA-20018,Nissan,Z,2024,54820,Denver
+SA-20019,Lexus,ES,2023,53250,Phoenix
+SA-20020,Genesis,GV80,2024,76450,Seattle
+SA-20021,Porsche,Taycan,2023,118850,Miami
+SA-20022,Cadillac,Escalade,2024,112595,Los Angeles
+SA-20023,Rivian,R1T,2023,88900,Austin
+SA-20024,Volvo,XC90,2024,72500,Chicago
+SA-20025,Lincoln,Aviator,2023,86200,Philadelphia
+SA-20026,Jaguar,F-Type,2024,109000,Boston
+SA-20027,Land Rover,Range Rover,2023,168195,Washington DC
+SA-20028,Infiniti,QX80,2024,87400,San Francisco
+SA-20029,Maserati,Grecale,2023,112995,Atlanta
+SA-20030,Lucid,Air,2024,139650,Scottsdale
