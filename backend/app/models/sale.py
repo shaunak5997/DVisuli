@@ -1,17 +1,21 @@
 from sqlalchemy import Column, Integer, String, Float, Date, PrimaryKeyConstraint
+from sqlalchemy.ext.declarative import declarative_base
 from .base import Base
 from datetime import datetime
+
+Base = declarative_base()
 
 class Sale(Base):
     __tablename__ = 'sales'
 
-    task_name = Column(String)
-    sale_id = Column(String)
+    task_name = Column(String, nullable=False)
+    sale_id = Column(String, nullable=False)
     company = Column(String)
     car_model = Column(String)
     manufacturing_year = Column(Integer)
     price = Column(Float)
     sales_location = Column(String)
+    date_of_sale = Column(Date)
 
     # Define composite primary key
     __table_args__ = (

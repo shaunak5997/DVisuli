@@ -19,7 +19,13 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Create database tables
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.drop_all(bind=engine)  # Drop all tables first
+    Base.metadata.create_all(bind=engine)  # Create tables with new schema
+    logger.info("Database tables created successfully")
+except Exception as e:
+    logger.error(f"Error creating database tables: {str(e)}")
+    raise
 
 app = FastAPI()
 
@@ -42,7 +48,10 @@ def process_data_source(source_data: pd.DataFrame, source_type: str) -> pd.DataF
         field_mapping = {
             'saleid': 'sale_id',
             'manufacturingyear': 'manufacturing_year',
-            'saleslocation': 'sales_location'
+            'saleslocation': 'sales_location',
+            'dateofsale': 'date_of_sale',
+            'saledate': 'date_of_sale',
+            'date': 'date_of_sale'
         }
         
         # Rename columns based on mapping
@@ -51,19 +60,26 @@ def process_data_source(source_data: pd.DataFrame, source_type: str) -> pd.DataF
         # Ensure required columns exist
         required_columns = [
             'sale_id', 'company', 'car_model', 'manufacturing_year',
-            'price', 'sales_location'
+            'price', 'sales_location', 'date_of_sale'
         ]
         
         # Add missing columns with default values
         for col in required_columns:
             if col not in source_data.columns:
-                source_data[col] = None
+                if col == 'date_of_sale':
+                    source_data[col] = pd.Timestamp.now().date()  # Default to current date
+                else:
+                    source_data[col] = None
         
         # Convert numeric columns
         numeric_columns = ['price', 'manufacturing_year']
         for col in numeric_columns:
             if col in source_data.columns:
                 source_data[col] = pd.to_numeric(source_data[col], errors='coerce')
+        
+        # Convert date column
+        if 'date_of_sale' in source_data.columns:
+            source_data['date_of_sale'] = pd.to_datetime(source_data['date_of_sale'], errors='coerce').dt.date
         
         return source_data
         
@@ -328,12 +344,22 @@ async def show_analytics(task_name: str):
             for sale in sales:
                 sale_dict = sale.__dict__
                 sale_dict.pop('_sa_instance_state', None)
+                # Convert date to string format
+                if sale_dict.get('date_of_sale'):
+                    sale_dict['date_of_sale'] = sale_dict['date_of_sale'].isoformat()
                 sales_data.append(sale_dict)
             
             # Calculate summary statistics
             total_sales = len(sales_data)
             total_revenue = sum(float(sale.get('price', 0)) for sale in sales_data)
             avg_price = total_revenue / total_sales if total_sales > 0 else 0
+            
+            # Get date range
+            dates = [pd.to_datetime(sale.get('date_of_sale', pd.Timestamp.now().date())) for sale in sales_data]
+            date_range = {
+                'start': min(dates).strftime('%Y-%m-%d'),
+                'end': max(dates).strftime('%Y-%m-%d')
+            }
             
             # Aggregate data for company bar chart
             company_aggregation = {}
@@ -357,26 +383,30 @@ async def show_analytics(task_name: str):
                 for company, data in company_aggregation.items()
             ]
             
-            # Aggregate data for car model bar chart
-            model_aggregation = {}
+            # Aggregate data by month and year
+            monthly_aggregation = {}
             for sale in sales_data:
-                model = sale.get('car_model', 'Unknown')
-                if model not in model_aggregation:
-                    model_aggregation[model] = {
+                date = pd.to_datetime(sale.get('date_of_sale', pd.Timestamp.now().date()))
+                month_key = date.strftime('%Y-%m')
+                if month_key not in monthly_aggregation:
+                    monthly_aggregation[month_key] = {
                         'count': 0,
-                        'total_revenue': 0
+                        'total_revenue': 0,
+                        'avg_price': 0
                     }
-                model_aggregation[model]['count'] += 1
-                model_aggregation[model]['total_revenue'] += float(sale.get('price', 0))
+                monthly_aggregation[month_key]['count'] += 1
+                monthly_aggregation[month_key]['total_revenue'] += float(sale.get('price', 0))
+                monthly_aggregation[month_key]['avg_price'] = monthly_aggregation[month_key]['total_revenue'] / monthly_aggregation[month_key]['count']
             
-            # Convert model aggregation to list format for D3.js
-            model_chart_data = [
+            # Convert monthly aggregation to list format for D3.js
+            monthly_chart_data = [
                 {
-                    'model': model,
+                    'month': month,
                     'count': data['count'],
-                    'total_revenue': round(data['total_revenue'], 2)
+                    'total_revenue': round(data['total_revenue'], 2),
+                    'avg_price': round(data['avg_price'], 2)
                 }
-                for model, data in model_aggregation.items()
+                for month, data in sorted(monthly_aggregation.items())
             ]
             
             return {
@@ -384,10 +414,11 @@ async def show_analytics(task_name: str):
                 "summary": {
                     "total_sales": total_sales,
                     "total_revenue": round(total_revenue, 2),
-                    "average_price": round(avg_price, 2)
+                    "average_price": round(avg_price, 2),
+                    "date_range": date_range
                 },
                 "company_chart_data": company_chart_data,
-                "model_chart_data": model_chart_data,
+                "monthly_chart_data": monthly_chart_data,
                 "sales_data": sales_data
             }
             

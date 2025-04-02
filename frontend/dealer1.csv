@@ -1,31 +1,31 @@
-saleId,company,car_model,manufacturingYear,price,salesLocation
-SA-20001,Ford,Mustang,2024,58950,Detroit
-SA-20002,Honda,Civic,2023,32450,Los Angeles
-SA-20003,Chevrolet,Bolt EUV,2024,39995,Seattle
-SA-20004,Toyota,Camry,2023,36425,Chicago
-SA-20005,Mercedes-Benz,S-Class,2022,114700,New York
-SA-20006,Kia,Telluride,2024,49990,Atlanta
-SA-20007,BMW,X5,2023,72500,Boston
-SA-20008,Jeep,Grand Cherokee,2024,68995,Denver
-SA-20009,Dodge,Challenger,2022,75250,Las Vegas
-SA-20010,Hyundai,Tucson,2024,38350,Portland
-SA-20011,Audi,A6,2023,62900,Dallas
-SA-20012,Subaru,Outback,2024,41995,Miami
-SA-20013,Volkswagen,ID.4,2023,47900,San Francisco
-SA-20014,Chrysler,Pacifica,2024,58995,Chicago
-SA-20015,Tesla,Model S,2023,129990,Washington DC
-SA-20016,Mazda,CX-90,2024,54925,Houston
-SA-20017,Acura,Integra,2023,37500,San Diego
-SA-20018,Nissan,Z,2024,54820,Denver
-SA-20019,Lexus,ES,2023,53250,Phoenix
-SA-20020,Genesis,GV80,2024,76450,Seattle
-SA-20021,Porsche,Taycan,2023,118850,Miami
-SA-20022,Cadillac,Escalade,2024,112595,Los Angeles
-SA-20023,Rivian,R1T,2023,88900,Austin
-SA-20024,Volvo,XC90,2024,72500,Chicago
-SA-20025,Lincoln,Aviator,2023,86200,Philadelphia
-SA-20026,Jaguar,F-Type,2024,109000,Boston
-SA-20027,Land Rover,Range Rover,2023,168195,Washington DC
-SA-20028,Infiniti,QX80,2024,87400,San Francisco
-SA-20029,Maserati,Grecale,2023,112995,Atlanta
-SA-20030,Lucid,Air,2024,139650,Scottsdale
+saleId,company,car_model,manufacturingYear,dateOfSale,price,salesLocation
+SA-20001,Ford,Mustang,2023,2025-01-25,65470,Dallas
+SA-20002,Honda,Civic,2023,2023-02-12,171103,Washington DC
+SA-20003,Chevrolet,Bolt EUV,2022,2024-03-04,125994,Scottsdale
+SA-20004,Toyota,Camry,2023,2023-08-14,69179,Detroit
+SA-20005,Mercedes-Benz,S-Class,2022,2025-03-05,105915,Dallas
+SA-20006,Kia,Telluride,2022,2024-10-13,40852,Miami
+SA-20007,BMW,X5,2023,2023-08-27,106945,Austin
+SA-20008,Jeep,Grand Cherokee,2023,2024-12-07,152025,San Diego
+SA-20009,Dodge,Challenger,2023,2024-10-11,74823,San Francisco
+SA-20010,Hyundai,Tucson,2023,2024-04-14,67071,New York
+SA-20011,Audi,A6,2022,2024-09-17,132556,Portland
+SA-20012,Subaru,Outback,2022,2025-03-06,122380,Denver
+SA-20013,Volkswagen,ID.4,2023,2025-02-11,169968,Boston
+SA-20014,Chrysler,Pacifica,2024,2023-07-22,106946,New York
+SA-20015,Tesla,Model S,2023,2024-08-03,134989,Philadelphia
+SA-20016,Mazda,CX-90,2022,2024-06-15,39467,San Diego
+SA-20017,Acura,Integra,2023,2023-10-10,162680,New York
+SA-20018,Nissan,Z,2022,2023-01-07,91216,Washington DC
+SA-20019,Lexus,ES,2024,2023-08-21,94898,San Francisco
+SA-20020,Genesis,GV80,2023,2023-08-01,101344,Dallas
+SA-20021,Porsche,Taycan,2022,2024-05-12,83448,Philadelphia
+SA-20022,Cadillac,Escalade,2022,2023-10-10,104403,San Francisco
+SA-20023,Rivian,R1T,2024,2024-11-15,61952,Chicago
+SA-20024,Volvo,XC90,2022,2023-05-01,155422,Seattle
+SA-20025,Lincoln,Aviator,2022,2023-12-14,157559,Chicago
+SA-20026,Jaguar,F-Type,2022,2023-09-18,153565,Detroit
+SA-20027,Land Rover,Range Rover,2023,2023-11-13,60308,Los Angeles
+SA-20028,Infiniti,QX80,2022,2023-06-21,47802,Miami
+SA-20029,Maserati,Grecale,2023,2024-05-13,63141,Detroit
+SA-20030,Lucid,Air,2023,2023-03-05,175931,Las Vegas
