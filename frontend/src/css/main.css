@@ -500,27 +500,34 @@ h2 {
 .charts-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 2rem;
-    padding: 2rem;
+    gap: 3rem;
+    padding: 3rem;
     background: #fff;
-    border-radius: 8px;
+    border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin: 2rem 0;
+    margin: 3rem auto;
+    max-width: 1400px;
 }
 
 .chart {
     background: #fff;
-    border-radius: 8px;
-    padding: 1.5rem;
+    border-radius: 12px;
+    padding: 2rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
 }
 
-.chart:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+.chart svg {
+    flex: 1;
+    min-height: 450px;
+    margin-top: 1rem;
+    position: relative;
+    z-index: 1;
 }
 
 /* Chart specific styles */
@@ -633,13 +640,108 @@ h2 {
 }
 
 /* Responsive design for smaller screens */
+@media (max-width: 1400px) {
+    .charts-container {
+        padding: 2rem;
+        gap: 2rem;
+    }
+}
+
 @media (max-width: 1200px) {
     .charts-container {
         grid-template-columns: 1fr;
-        gap: 1.5rem;
+        gap: 2rem;
+        padding: 1.5rem;
+    }
+    
+    .chart {
+        padding: 1.5rem;
+        min-height: 450px;
+    }
+}
+
+@media (max-width: 768px) {
+    .charts-container {
+        padding: 1rem;
+        margin: 1rem;
     }
     
     .chart {
         padding: 1rem;
+        min-height: 400px;
     }
+}
+
+.chart-filter {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    position: relative;
+    z-index: 2;
+}
+
+.chart-filter select {
+    min-width: 150px;
+    font-size: 0.9rem;
+    border: 1px solid #ced4da;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0.5rem 2rem 0.5rem 1rem;
+    border-radius: 4px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 12px;
+    position: relative;
+    z-index: 3;
+}
+
+.chart-filter select:hover {
+    border-color: #adb5bd;
+    background-color: #f8f9fa;
+}
+
+.chart-filter select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+/* Update chart container to accommodate filters */
+.chart {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ensure chart SVG takes remaining space */
+.chart svg {
+    flex: 1;
+    min-height: 400px;
+    margin-top: 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* Ensure filters are above the chart */
+.chart-filter {
+    position: relative;
+    z-index: 2;
+}
+
+/* Make sure the chart container doesn't clip the filters */
+.chart {
+    overflow: visible !important;
 }

@@ -155,29 +155,23 @@ async def generate_report(
                 elif source.filename.endswith('.xlsx'):
                     df = pd.read_excel(StringIO(content.decode('utf-8')))
                 elif source.filename.endswith('.json'):
-                    # Handle JSON files
                     json_data = json.loads(content.decode('utf-8'))
-                    # Convert JSON to DataFrame, handling both array and object formats
                     if isinstance(json_data, list):
                         df = pd.DataFrame(json_data)
                     else:
-                        # If JSON is an object, convert to DataFrame with one row
                         df = pd.DataFrame([json_data])
                 else:
                     raise HTTPException(status_code=400, detail=f"Unsupported file format: {source.filename}")
                 
-                # Process the data
                 processed_df = process_data_source(df, 'file')
                 processed_sources.append(processed_df)
                 
-                # Add source metadata
                 source_metadata.append({
                     'name': source.filename,
                     'type': 'file',
                     'records': len(processed_df),
                     'columns': list(processed_df.columns)
                 })
-                
             except Exception as e:
                 logger.error(f"Error processing source {source.filename}: {str(e)}")
                 raise HTTPException(status_code=400, detail=f"Error processing source {source.filename}: {str(e)}")
@@ -185,89 +179,80 @@ async def generate_report(
         # Process URL sources
         for url in source_urls:
             try:
-                # Download file from URL
                 response = requests.get(url)
                 response.raise_for_status()
                 
-                # Determine file type from URL or content
                 if url.endswith('.csv'):
                     df = pd.read_csv(StringIO(response.text))
                 elif url.endswith('.xlsx'):
                     df = pd.read_excel(StringIO(response.content))
                 elif url.endswith('.json'):
-                    # Handle JSON files from URL
                     json_data = response.json()
-                    # Convert JSON to DataFrame, handling both array and object formats
                     if isinstance(json_data, list):
                         df = pd.DataFrame(json_data)
                     else:
-                        # If JSON is an object, convert to DataFrame with one row
                         df = pd.DataFrame([json_data])
                 else:
-                    raise HTTPException(status_code=400, detail=f"Unsupported file format for URL: {url}")
+                    raise HTTPException(status_code=400, detail=f"Unsupported URL format: {url}")
                 
-                # Process the data
                 processed_df = process_data_source(df, 'url')
                 processed_sources.append(processed_df)
                 
-                # Add source metadata
                 source_metadata.append({
                     'name': url,
                     'type': 'url',
                     'records': len(processed_df),
                     'columns': list(processed_df.columns)
                 })
-                
             except Exception as e:
-                logger.error(f"Error processing URL source {url}: {str(e)}")
-                raise HTTPException(status_code=400, detail=f"Error processing URL source {url}: {str(e)}")
+                logger.error(f"Error processing URL {url}: {str(e)}")
+                raise HTTPException(status_code=400, detail=f"Error processing URL {url}: {str(e)}")
         
+        # Combine all processed sources
         if not processed_sources:
             raise HTTPException(status_code=400, detail="No valid data sources provided")
         
-        # Combine all processed sources
-        combined_data = pd.concat(processed_sources, ignore_index=True)
+        combined_df = pd.concat(processed_sources, ignore_index=True)
         
-        # Apply filters if provided
+        # Apply filters if any
         if filter_dict:
-            combined_data = apply_filters(combined_data, filter_dict)
+            combined_df = apply_filters(combined_df, filter_dict)
         
-        # Store data in database
+        # Create database session
         db = SessionLocal()
         try:
-            # Delete existing data for this task
-            db.query(Sale).filter(Sale.task_name == task_name).delete()
-            
-            # Insert new data
-            for _, row in combined_data.iterrows():
-                sale = Sale(**row.to_dict(), task_name=task_name)
+            # Save to database
+            for _, row in combined_df.iterrows():
+                sale = Sale(
+                    task_name=task_name,
+                    sale_id=row.get('sale_id'),
+                    company=row.get('company'),
+                    car_model=row.get('car_model'),
+                    manufacturing_year=row.get('manufacturing_year'),
+                    price=row.get('price'),
+                    sales_location=row.get('sales_location'),
+                    date_of_sale=row.get('date_of_sale')
+                )
                 db.add(sale)
-            
             db.commit()
-            
-            # Get total records count
-            total_records = db.query(func.count(Sale.sale_id)).filter(Sale.task_name == task_name).scalar()
-            
-            return {
-                "task_name": task_name,
-                "task_description": task_description,
-                "status": "success",
-                "processed_sources": len(processed_sources),
-                "total_records": total_records,
-                "processed_data": combined_data.to_dict(orient='records'),
-                "source_metadata": source_metadata
-            }
-            
         except Exception as e:
             db.rollback()
             logger.error(f"Database error: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
         finally:
             db.close()
-            
+        
+        return JSONResponse({
+            "message": "Report generated successfully",
+            "task_name": task_name,
+            "sources_processed": len(source_metadata),
+            "total_records": len(combined_df),
+            "source_metadata": source_metadata
+        })
+        
     except Exception as e:
-        logger.error(f"Error in generate_report: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error generating report: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating report: {str(e)}")
 
 @app.get("/tasks/{task_name}")
 async def get_task(task_name: str):

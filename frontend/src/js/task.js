@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
             taskElement.innerHTML = `
                 <h4>${task.name}</h4>
                 <p>${task.description || 'No description'}</p>
-                <p>Sources: ${task.sources}</p>
+                <p>Items: ${task.sources}</p>
                 <div class="task-status status-${task.status}">
                     <i class="bi ${getStatusIcon(task.status)}"></i>
                     ${task.status.charAt(0).toUpperCase() + task.status.slice(1)}
@@ -457,13 +457,65 @@ document.addEventListener('DOMContentLoaded', function() {
     function createBarChart(data, containerId, title, xKey, yKey, color, isLineChart = false) {
         // Get container width and set responsive dimensions
         const container = document.getElementById(containerId);
+        
+        // Store the original data for filtering
+        if (isLineChart) {
+            // Only store if not already stored
+            if (!window.originalMonthlyData) {
+                window.originalMonthlyData = [...data];
+            }
+        }
+        
+        // Clear previous SVG only
+        const existingSvg = container.querySelector('svg');
+        if (existingSvg) {
+            existingSvg.remove();
+        }
+        
+        // Remove existing no-data message if it exists
+        const existingMessage = container.querySelector('.no-data-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+        
+        // If this is the monthly chart and filters don't exist, create them
+        if (isLineChart && !container.querySelector('.chart-filter')) {
+            const filterContainer = document.createElement('div');
+            filterContainer.className = 'chart-filter';
+            
+            // Get unique years from original data
+            const years = [...new Set(window.originalMonthlyData.map(d => d.month.split('-')[0]))].sort();
+            
+            // Create filter HTML
+            filterContainer.innerHTML = `
+                <select id="yearFilter" class="form-select">
+                    <option value="all">All Years</option>
+                    ${years.map(year => 
+                        `<option value="${year}">${year}</option>`
+                    ).join('')}
+                </select>
+                <select id="monthFilter" class="form-select">
+                    <option value="all">All Months</option>
+                    ${['January', 'February', 'March', 'April', 'May', 'June',
+                       'July', 'August', 'September', 'October', 'November', 'December'].map((month, index) => 
+                        `<option value="${String(index + 1).padStart(2, '0')}">${month}</option>`
+                    ).join('')}
+                </select>
+            `;
+            container.insertBefore(filterContainer, container.firstChild);
+            
+            // Add event listeners
+            const yearFilter = document.getElementById('yearFilter');
+            const monthFilter = document.getElementById('monthFilter');
+            
+            yearFilter.addEventListener('change', updateMonthlyChart);
+            monthFilter.addEventListener('change', updateMonthlyChart);
+        }
+        
         const containerWidth = container.clientWidth;
-        const margin = { top: 20, right: 30, bottom: 40, left: 60 };
+        const margin = { top: 40, right: 30, bottom: 40, left: 60 };
         const width = containerWidth - margin.left - margin.right;
         const height = 400 - margin.top - margin.bottom;
-
-        // Clear previous content
-        d3.select(`#${containerId}`).html("");
 
         // Create SVG
         const svg = d3.select(`#${containerId}`)
@@ -575,7 +627,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     d3.select("#tooltip").style("opacity", 0);
                 });
         } else {
-            // Add bars for model data
+            // Add bars for company data
             svg.selectAll(".bar")
                 .data(data)
                 .enter()
@@ -608,6 +660,54 @@ document.addEventListener('DOMContentLoaded', function() {
                     d3.select("#tooltip").style("opacity", 0);
                 });
         }
+    }
+
+    // Function to update monthly chart based on filters
+    function updateMonthlyChart() {
+        const yearFilter = document.getElementById('yearFilter');
+        const monthFilter = document.getElementById('monthFilter');
+        const selectedYear = yearFilter.value;
+        const selectedMonth = monthFilter.value;
+        
+        // Get the original data
+        let filteredData = [...window.originalMonthlyData];
+        
+        // Apply filters
+        if (selectedYear !== 'all') {
+            filteredData = filteredData.filter(d => d.month.startsWith(selectedYear));
+        }
+        
+        if (selectedMonth !== 'all') {
+            filteredData = filteredData.filter(d => {
+                const monthPart = d.month.split('-')[1];
+                return monthPart === selectedMonth;
+            });
+        }
+
+        // If no data after filtering, show a message
+        if (filteredData.length === 0) {
+            const container = document.getElementById('monthlyChart');
+            const existingSvg = container.querySelector('svg');
+            if (existingSvg) {
+                existingSvg.remove();
+            }
+            
+            // Add a message when no data is available
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'no-data-message';
+            messageDiv.style.textAlign = 'center';
+            messageDiv.style.padding = '2rem';
+            messageDiv.style.color = '#666';
+            messageDiv.innerHTML = `
+                <i class="bi bi-info-circle" style="font-size: 2rem;"></i>
+                <p style="margin-top: 1rem;">No data available for the selected filters</p>
+            `;
+            container.appendChild(messageDiv);
+            return;
+        }
+
+        // Update the chart with filtered data
+        createBarChart(filteredData, 'monthlyChart', 'Average Sale Price Over Time', 'month', 'average_price', '#2196F3', true);
     }
 
     // Fetch existing tasks when the page loads
