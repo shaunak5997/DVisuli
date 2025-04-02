@@ -362,11 +362,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="analytics-container">
                         <div id="analyticsContainer">
                             <div class="charts-container">
-                                <div id="modelChart" class="chart"></div>
+                                <div id="companyChart" class="chart"></div>
                                 <div id="monthlyChart" class="chart"></div>
                             </div>
                         </div>
                     </div>
+                    <div id="tooltip"></div>
                 `;
                 
                 // Insert before the task history pane
@@ -387,18 +388,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const chartsContainer = document.createElement('div');
             chartsContainer.className = 'charts-container';
             chartsContainer.innerHTML = `
-                <div id="modelChart" class="chart"></div>
+                <div id="companyChart" class="chart"></div>
                 <div id="monthlyChart" class="chart"></div>
             `;
             container.appendChild(chartsContainer);
             
             // Process data for charts
-            const modelChartData = processModelChartData(data.sales_data);
+            const companyChartData = processCompanyChartData(data.sales_data);
             const monthlyChartData = processMonthlyChartData(data.sales_data);
             
             // Create charts only if we have data
-            if (modelChartData.length > 0) {
-                createBarChart(modelChartData, 'modelChart', 'Sales by Car Model', 'model', 'total_sales', '#4CAF50');
+            if (companyChartData.length > 0) {
+                createBarChart(companyChartData, 'companyChart', 'Sales by Company', 'company', 'total_sales', '#4CAF50');
             }
             
             if (monthlyChartData.length > 0) {
@@ -413,21 +414,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Helper function to process data for model chart
-    function processModelChartData(salesData) {
-        const modelData = {};
+    // Helper function to process data for company chart
+    function processCompanyChartData(salesData) {
+        const companyData = {};
         salesData.forEach(sale => {
-            if (!modelData[sale.car_model]) {
-                modelData[sale.car_model] = {
-                    model: sale.car_model,
+            if (!companyData[sale.company]) {
+                companyData[sale.company] = {
+                    company: sale.company,
                     total_sales: 0,
                     total_revenue: 0
                 };
             }
-            modelData[sale.car_model].total_sales += 1;
-            modelData[sale.car_model].total_revenue += sale.price;
+            companyData[sale.company].total_sales += 1;
+            companyData[sale.company].total_revenue += sale.price;
         });
-        return Object.values(modelData);
+        return Object.values(companyData);
     }
 
     // Helper function to process data for monthly chart
@@ -478,8 +479,9 @@ document.addEventListener('DOMContentLoaded', function() {
             .attr("x", width / 2)
             .attr("y", -5)
             .attr("text-anchor", "middle")
-            .style("font-size", "16px")
+            .style("font-size", "18px")
             .style("font-weight", "bold")
+            .style("fill", "#2c3e50")
             .text(title);
 
         // Create scales
@@ -493,6 +495,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Set domains
         x.domain(data.map(d => d[xKey]));
         y.domain([0, d3.max(data, d => d[yKey])]);
+
+        // Add grid lines
+        svg.append("g")
+            .attr("class", "grid")
+            .call(d3.axisLeft(y)
+                .tickSize(-width)
+                .tickFormat("")
+            );
 
         // Add X axis
         svg.append("g")
@@ -508,11 +518,21 @@ document.addEventListener('DOMContentLoaded', function() {
         svg.append("g")
             .call(d3.axisLeft(y));
 
+        // Add Y axis label
+        svg.append("text")
+            .attr("class", "axis-title")
+            .attr("transform", "rotate(-90)")
+            .attr("y", -40)
+            .attr("x", -height / 2)
+            .attr("text-anchor", "middle")
+            .text(isLineChart ? "Average Price ($)" : "Number of Sales");
+
         // Add line for monthly data
         if (isLineChart) {
             const line = d3.line()
                 .x(d => x(d[xKey]) + x.bandwidth() / 2)
-                .y(d => y(d[yKey]));
+                .y(d => y(d[yKey]))
+                .curve(d3.curveMonotoneX);
 
             svg.append("path")
                 .datum(data)
@@ -534,12 +554,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 .on("mouseover", function(event, d) {
                     d3.select(this)
                         .attr("r", 8)
-                        .attr("fill", "#ff6b6b");
+                        .attr("fill", "#3498db");
                     
                     // Show tooltip
                     const tooltip = d3.select("#tooltip");
                     tooltip.style("opacity", 1)
-                        .html(`Month: ${d[xKey]}<br>Average Price: $${d[yKey].toLocaleString()}<br>Total Revenue: $${d.total_revenue.toLocaleString()}`)
+                        .html(`
+                            <strong>${d[xKey]}</strong><br>
+                            Average Price: $${d[yKey].toLocaleString()}<br>
+                            Total Revenue: $${d.total_revenue.toLocaleString()}<br>
+                            Number of Sales: ${d.count}
+                        `)
                         .style("left", (event.pageX + 10) + "px")
                         .style("top", (event.pageY - 10) + "px");
                 })
@@ -563,12 +588,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 .attr("fill", color)
                 .on("mouseover", function(event, d) {
                     d3.select(this)
-                        .attr("fill", "#ff6b6b");
+                        .attr("fill", "#2ecc71");
                     
                     // Show tooltip
                     const tooltip = d3.select("#tooltip");
                     tooltip.style("opacity", 1)
-                        .html(`${d[xKey]}: ${d[yKey]} sales`)
+                        .html(`
+                            <strong>${d[xKey]}</strong><br>
+                            Number of Sales: ${d[yKey]}<br>
+                            Total Revenue: $${d.total_revenue.toLocaleString()}<br>
+                            Average Price: $${(d.total_revenue / d[yKey]).toLocaleString()}
+                        `)
                         .style("left", (event.pageX + 10) + "px")
                         .style("top", (event.pageY - 10) + "px");
                 })

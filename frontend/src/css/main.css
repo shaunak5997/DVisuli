@@ -504,20 +504,132 @@ h2 {
     padding: 2rem;
     background: #fff;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     margin: 2rem 0;
 }
 
 .chart {
     background: #fff;
     border-radius: 8px;
-    padding: 1rem;
+    padding: 1.5rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .chart:hover {
     transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Chart specific styles */
+.bar {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.bar:hover {
+    fill: #2ecc71;
+    filter: brightness(1.1);
+}
+
+.dot {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.dot:hover {
+    r: 8;
+    fill: #3498db;
+    filter: brightness(1.1);
+}
+
+/* Tooltip styles */
+#tooltip {
+    position: fixed;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    border-radius: 6px;
+    font-size: 14px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 9999;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 300px;
+}
+
+#tooltip::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -8px;
+    transform: translateY(-50%);
+    border-width: 8px 8px 8px 0;
+    border-style: solid;
+    border-color: transparent rgba(0, 0, 0, 0.8) transparent transparent;
+}
+
+#tooltip strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #3498db;
+}
+
+#tooltip br {
+    display: block;
+    margin: 3px 0;
+}
+
+/* Ensure tooltip is visible on top of other elements */
+.analytics-section {
+    position: relative;
+    z-index: 1;
+}
+
+.chart {
+    position: relative;
+    z-index: 1;
+}
+
+/* Chart axis styles */
+.axis text {
+    font-size: 12px;
+    fill: #666;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.axis line, .axis path {
+    stroke: #ddd;
+}
+
+.axis-title {
+    font-size: 14px;
+    font-weight: 600;
+    fill: #333;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Chart title styles */
+.chart-title {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #2c3e50;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Chart grid lines */
+.grid line {
+    stroke: #eee;
+    stroke-width: 1;
+}
+
+.grid path {
+    stroke-width: 0;
 }
 
 /* Responsive design for smaller screens */
@@ -526,66 +638,8 @@ h2 {
         grid-template-columns: 1fr;
         gap: 1.5rem;
     }
-}
-
-/* Chart specific styles */
-.bar {
-    transition: fill 0.3s ease;
-}
-
-.bar:hover {
-    fill: #ff6b6b;
-}
-
-.dot {
-    transition: r 0.3s ease, fill 0.3s ease;
-}
-
-.dot:hover {
-    r: 8;
-    fill: #ff6b6b;
-}
-
-/* Tooltip styles */
-#tooltip {
-    position: absolute;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    border-radius: 4px;
-    font-size: 12px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 1000;
-}
-
-/* Chart axis styles */
-.axis text {
-    font-size: 12px;
-    fill: #666;
-}
-
-.axis line, .axis path {
-    stroke: #ddd;
-}
-
-/* Chart title styles */
-.chart-title {
-    font-size: 16px;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 1rem;
-    color: #333;
-}
-
-/* Chart container styles */
-.chart-container {
-    width: 100%;
-    height: 100%;
-    min-height: 400px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    
+    .chart {
+        padding: 1rem;
+    }
 }
