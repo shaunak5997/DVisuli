@@ -359,6 +359,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 newAnalyticsSection.id = 'analyticsSection';
                 newAnalyticsSection.className = 'analytics-section';
                 newAnalyticsSection.innerHTML = `
+                    <div class="analytics-header d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="m-0">Analytics</h3>
+                        <button type="button" class="btn-close" aria-label="Close" id="closeAnalytics"></button>
+                    </div>
                     <div class="analytics-container">
                         <div id="analyticsContainer">
                             <div class="charts-container">
@@ -372,6 +376,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Insert before the task history pane
                 taskHistoryPane.parentNode.insertBefore(newAnalyticsSection, taskHistoryPane);
+                
+                // Add event listener for close button
+                const closeButton = newAnalyticsSection.querySelector('#closeAnalytics');
+                closeButton.addEventListener('click', () => {
+                    newAnalyticsSection.style.display = 'none';
+                });
                 
                 // Update references
                 analyticsSection = document.getElementById('analyticsSection');
@@ -460,9 +470,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Store the original data for filtering
         if (isLineChart) {
-            // Only store if not already stored
             if (!window.originalMonthlyData) {
                 window.originalMonthlyData = [...data];
+            }
+        } else {
+            // Store company data
+            if (!window.originalCompanyData) {
+                window.originalCompanyData = [...data];
             }
         }
         
@@ -476,6 +490,84 @@ document.addEventListener('DOMContentLoaded', function() {
         const existingMessage = container.querySelector('.no-data-message');
         if (existingMessage) {
             existingMessage.remove();
+        }
+        
+        // Add company filter for the company chart
+        if (!isLineChart && !container.querySelector('.chart-filter')) {
+            const filterContainer = document.createElement('div');
+            filterContainer.className = 'chart-filter';
+            
+            // Get unique companies from original data
+            const companies = [...new Set(window.originalCompanyData.map(d => d.company))].sort();
+            
+            // Create filter HTML with Bootstrap dropdown and checkboxes
+            filterContainer.innerHTML = `
+                <div class="dropdown mb-3">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="companyFilterBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                        Select Companies
+                    </button>
+                    <div class="dropdown-menu p-3" style="width: 300px; max-height: 400px; overflow-y: auto;">
+                        <div class="mb-2">
+                            <button id="selectAllCompanies" class="btn btn-sm btn-outline-primary me-2">Select All</button>
+                            <button id="clearCompanies" class="btn btn-sm btn-outline-secondary">Clear</button>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div id="companyCheckboxes">
+                            ${companies.map(company => `
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input company-checkbox" type="checkbox" value="${company}" id="check-${company.replace(/\s+/g, '-')}" checked>
+                                    <label class="form-check-label" for="check-${company.replace(/\s+/g, '-')}">
+                                        ${company}
+                                    </label>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertBefore(filterContainer, container.firstChild);
+            
+            // Add event listeners
+            const checkboxes = container.querySelectorAll('.company-checkbox');
+            const selectAllBtn = container.querySelector('#selectAllCompanies');
+            const clearBtn = container.querySelector('#clearCompanies');
+            const dropdownMenu = container.querySelector('.dropdown-menu');
+            
+            // Prevent dropdown from closing when clicking inside
+            dropdownMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+            
+            // Update chart when any checkbox changes
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    updateCompanyFilterButton();
+                    updateCompanyChart();
+                });
+            });
+            
+            // Select All button functionality
+            selectAllBtn.addEventListener('click', () => {
+                checkboxes.forEach(checkbox => checkbox.checked = true);
+                updateCompanyFilterButton();
+                updateCompanyChart();
+            });
+            
+            // Clear button functionality
+            clearBtn.addEventListener('click', () => {
+                checkboxes.forEach(checkbox => checkbox.checked = false);
+                updateCompanyFilterButton();
+                updateCompanyChart();
+            });
+            
+            // Function to update the filter button text
+            function updateCompanyFilterButton() {
+                const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+                const buttonText = checkedCount === 0 ? 'Select Companies' :
+                                 checkedCount === checkboxes.length ? 'All Companies Selected' :
+                                 `${checkedCount} Companies Selected`;
+                document.getElementById('companyFilterBtn').textContent = buttonText;
+            }
         }
         
         // If this is the monthly chart and filters don't exist, create them
@@ -512,12 +604,18 @@ document.addEventListener('DOMContentLoaded', function() {
             monthFilter.addEventListener('change', updateMonthlyChart);
         }
         
+        // Update margins to accommodate longer labels
+        const margin = { 
+            top: 40, 
+            right: 30, 
+            bottom: isLineChart ? 60 : 120, // Increase bottom margin for company names
+            left: 80  // Increase left margin for y-axis labels
+        };
         const containerWidth = container.clientWidth;
-        const margin = { top: 40, right: 30, bottom: 40, left: 60 };
         const width = containerWidth - margin.left - margin.right;
         const height = 400 - margin.top - margin.bottom;
 
-        // Create SVG
+        // Create SVG with updated viewBox
         const svg = d3.select(`#${containerId}`)
             .append("svg")
             .attr("width", "100%")
@@ -556,28 +654,51 @@ document.addEventListener('DOMContentLoaded', function() {
                 .tickFormat("")
             );
 
-        // Add X axis
-        svg.append("g")
+        // Update X axis rendering
+        const xAxis = svg.append("g")
             .attr("transform", `translate(0,${height})`)
             .call(d3.axisBottom(x))
             .selectAll("text")
             .style("text-anchor", "end")
             .attr("dx", "-.8em")
             .attr("dy", ".15em")
-            .attr("transform", "rotate(-45)");
+            .attr("transform", function(d) {
+                const textLength = this.getComputedTextLength();
+                const maxLength = x.bandwidth() * 1.5;
+                if (textLength > maxLength) {
+                    // If text is too long, rotate it
+                    return `rotate(-45)`;
+                }
+                return `rotate(-45)`;
+            });
 
-        // Add Y axis
-        svg.append("g")
-            .call(d3.axisLeft(y));
+        // Add Y axis with formatted numbers
+        const yAxis = svg.append("g")
+            .call(d3.axisLeft(y)
+                .tickFormat(d => {
+                    if (d >= 1000) {
+                        return (d/1000) + 'k';
+                    }
+                    return d;
+                })
+            );
 
-        // Add Y axis label
+        // Update Y axis label position
         svg.append("text")
             .attr("class", "axis-title")
             .attr("transform", "rotate(-90)")
-            .attr("y", -40)
+            .attr("y", -margin.left + 20)  // Adjust based on new left margin
             .attr("x", -height / 2)
             .attr("text-anchor", "middle")
             .text(isLineChart ? "Average Price ($)" : "Number of Sales");
+
+        // Add X axis label for clarity
+        svg.append("text")
+            .attr("class", "axis-title")
+            .attr("x", width / 2)
+            .attr("y", height + (isLineChart ? 40 : 100))  // Position below rotated labels
+            .attr("text-anchor", "middle")
+            .text(isLineChart ? "Month" : "Company");
 
         // Add line for monthly data
         if (isLineChart) {
@@ -640,7 +761,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 .attr("fill", color)
                 .on("mouseover", function(event, d) {
                     d3.select(this)
-                        .attr("fill", "#2ecc71");
+                        .attr("fill", "#4caf50");
                     
                     // Show tooltip
                     const tooltip = d3.select("#tooltip");
@@ -708,6 +829,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Update the chart with filtered data
         createBarChart(filteredData, 'monthlyChart', 'Average Sale Price Over Time', 'month', 'average_price', '#2196F3', true);
+    }
+
+    // Function to update company chart based on filter
+    function updateCompanyChart() {
+        const checkboxes = document.querySelectorAll('.company-checkbox:checked');
+        const selectedCompanies = Array.from(checkboxes).map(cb => cb.value);
+        
+        // Get the original data
+        let filteredData = [...window.originalCompanyData];
+        
+        // Apply filter if any companies are selected
+        if (selectedCompanies.length > 0) {
+            filteredData = filteredData.filter(d => selectedCompanies.includes(d.company));
+        }
+
+        // If no data after filtering or no companies selected, show a message
+        if (filteredData.length === 0 || selectedCompanies.length === 0) {
+            const container = document.getElementById('companyChart');
+            const existingSvg = container.querySelector('svg');
+            if (existingSvg) {
+                existingSvg.remove();
+            }
+            
+            // Add a message when no data is available
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'no-data-message';
+            messageDiv.style.textAlign = 'center';
+            messageDiv.style.padding = '2rem';
+            messageDiv.style.color = '#666';
+            messageDiv.innerHTML = `
+                <i class="bi bi-info-circle" style="font-size: 2rem;"></i>
+                <p style="margin-top: 1rem;">No data available for the selected filters</p>
+            `;
+            container.appendChild(messageDiv);
+            return;
+        }
+
+        // Update the chart with filtered data
+        createBarChart(filteredData, 'companyChart', 'Sales by Company', 'company', 'total_sales', '#4CAF50');
     }
 
     // Fetch existing tasks when the page loads

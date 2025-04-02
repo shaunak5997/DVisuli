@@ -148,7 +148,6 @@ async def generate_report(
         # Process uploaded files
         for source in sources:
             try:
-                # Read file content
                 content = await source.read()
                 if source.filename.endswith('.csv'):
                     df = pd.read_csv(StringIO(content.decode('utf-8')))
@@ -162,10 +161,8 @@ async def generate_report(
                         df = pd.DataFrame([json_data])
                 else:
                     raise HTTPException(status_code=400, detail=f"Unsupported file format: {source.filename}")
-                
                 processed_df = process_data_source(df, 'file')
                 processed_sources.append(processed_df)
-                
                 source_metadata.append({
                     'name': source.filename,
                     'type': 'file',

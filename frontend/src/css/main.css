@@ -592,8 +592,30 @@ h2 {
 
 /* Ensure tooltip is visible on top of other elements */
 .analytics-section {
-    position: relative;
-    z-index: 1;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.analytics-header {
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.analytics-header h3 {
+    color: #2c3e50;
+    font-size: 1.5rem;
+}
+
+.analytics-header .btn-close {
+    padding: 0.5rem;
+    transition: opacity 0.2s;
+}
+
+.analytics-header .btn-close:hover {
+    opacity: 0.7;
 }
 
 .chart {
