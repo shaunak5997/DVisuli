@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
             window.visualizationData = parsedData;
             
             showUploadStatus('Data loaded successfully!', 'success');
-            document.getElementById('chart-container').style.display = 'block';
+            //document.getElementById('chart-container').style.display = 'block';
             
             // Call visualization function (defined in main.js)
             if (typeof createVisualization === 'function') {

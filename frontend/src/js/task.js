@@ -337,24 +337,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             const data = await response.json();
             
-            // Validate data structure
-            if (!data || !data.summary || !data.sales_data) {
-                throw new Error('Invalid data structure received from server');
-            }
-            
-            // Get the analytics section and container
+            // Get or create analytics section
             let analyticsSection = document.getElementById('analyticsSection');
-            let container = document.getElementById('analyticsContainer');
+            let container;
             
-            if (!analyticsSection || !container) {
-                console.error('Analytics section elements not found. Creating them...');
-                
-                // Create analytics section if it doesn't exist
-                const taskHistoryPane = document.querySelector('.task-history-pane');
-                if (!taskHistoryPane) {
-                    throw new Error('Task history pane not found');
-                }
-                
+            if (!analyticsSection) {
+                // Create new analytics section
                 const newAnalyticsSection = document.createElement('div');
                 newAnalyticsSection.id = 'analyticsSection';
                 newAnalyticsSection.className = 'analytics-section';
@@ -377,11 +365,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 `;
                 
-                // Insert before the task history pane
-                taskHistoryPane.parentNode.insertBefore(newAnalyticsSection, taskHistoryPane);
+                // Add to page
+                document.querySelector('.container').appendChild(newAnalyticsSection);
                 
-                // Add event listener for close button
-                const closeButton = newAnalyticsSection.querySelector('#closeAnalytics');
+                // Add close button functionality
+                const closeButton = document.getElementById('closeAnalytics');
                 closeButton.addEventListener('click', () => {
                     newAnalyticsSection.style.display = 'none';
                 });
@@ -393,22 +381,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Show the analytics section
             analyticsSection.style.display = 'block';
-            
-            // Clear the container
-            container.innerHTML = '';
-            
-            // Add charts container
-            const chartsContainer = document.createElement('div');
-            chartsContainer.className = 'charts-container';
-            chartsContainer.innerHTML = `
-                <div id="companyChart" class="chart">
-                    <div id="companyTooltip" class="tooltip"></div>
-                </div>
-                <div id="monthlyChart" class="chart">
-                    <div id="monthlyTooltip" class="tooltip"></div>
-                </div>
-            `;
-            container.appendChild(chartsContainer);
             
             // Process data for charts
             const companyChartData = processCompanyChartData(data.sales_data);
@@ -732,13 +704,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 .attr("r", 5)
                 .attr("fill", color)
                 .on("mouseover", function(event, d) {
+                    // Highlight the dot
                     d3.select(this)
                         .attr("r", 8)
                         .attr("fill", "#3498db");
                     
                     // Get the position of the current dot
-                    const circle = this.getBoundingClientRect();
-                    const containerRect = container.getBoundingClientRect();
+                    const dot = d3.select(this).node();
+                    const dotRect = dot.getBoundingClientRect();
                     
                     // Show tooltip using the monthly-specific tooltip
                     const tooltip = d3.select("#monthlyTooltip");
@@ -749,14 +722,18 @@ document.addEventListener('DOMContentLoaded', function() {
                             Total Revenue: $${d.total_revenue.toLocaleString()}<br>
                             Number of Sales: ${d.count}
                         `)
-                        .style("left", (circle.left + circle.width/2 - containerRect.left) + "px")
-                        .style("top", (circle.top - containerRect.top - 70) + "px");
+                        .style("left", `${dotRect.left + dotRect.width/2}px`)
+                        .style("top", `${dotRect.top - 10}px`);
                 })
                 .on("mouseout", function() {
+                    // Reset dot appearance
                     d3.select(this)
                         .attr("r", 5)
                         .attr("fill", color);
-                    d3.select("#monthlyTooltip").style("opacity", 0);
+                    
+                    // Hide tooltip
+                    d3.select("#monthlyTooltip")
+                        .style("opacity", 0);
                 });
         } else {
             // Add bars for company data
@@ -771,12 +748,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 .attr("height", d => height - y(d[yKey]))
                 .attr("fill", color)
                 .on("mouseover", function(event, d) {
+                    // Highlight the bar
                     d3.select(this)
                         .attr("fill", "#2ecc71");
                     
                     // Get the position of the current bar
-                    const rect = this.getBoundingClientRect();
-                    const containerRect = container.getBoundingClientRect();
+                    const bar = d3.select(this).node();
+                    const barRect = bar.getBoundingClientRect();
                     
                     // Show tooltip using the company-specific tooltip
                     const tooltip = d3.select("#companyTooltip");
@@ -787,13 +765,17 @@ document.addEventListener('DOMContentLoaded', function() {
                             Total Revenue: $${d.total_revenue.toLocaleString()}<br>
                             Average Price: $${(d.total_revenue / d[yKey]).toLocaleString()}
                         `)
-                        .style("left", (rect.left + rect.width/2 - containerRect.left) + "px")
-                        .style("top", (rect.top - containerRect.top - 70) + "px");
+                        .style("left", `${barRect.left + barRect.width/2}px`)
+                        .style("top", `${barRect.top - 10}px`);
                 })
                 .on("mouseout", function() {
+                    // Reset bar color
                     d3.select(this)
                         .attr("fill", color);
-                    d3.select("#companyTooltip").style("opacity", 0);
+                    
+                    // Hide tooltip
+                    d3.select("#companyTooltip")
+                        .style("opacity", 0);
                 });
         }
     }

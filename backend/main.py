@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import List, Optional
@@ -13,6 +13,9 @@ from app.database import SessionLocal, engine
 from sqlalchemy.orm import Session
 from sqlalchemy import func, distinct
 import logging
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -29,14 +32,49 @@ except Exception as e:
 
 app = FastAPI()
 
-# Configure CORS
+# Configure rate limiting
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Configure CORS with specific origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5500", "http://127.0.0.1:5500"],  # Add your frontend URLs
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST"],  # Specify allowed methods
     allow_headers=["*"],
 )
+
+# Request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = datetime.now()
+    response = await call_next(request)
+    end_time = datetime.now()
+    
+    logger.info(
+        f"Path: {request.url.path} "
+        f"Method: {request.method} "
+        f"Client: {request.client.host} "
+        f"Duration: {(end_time - start_time).total_seconds():.3f}s "
+        f"Status: {response.status_code}"
+    )
+    
+    return response
+
+# Input validation function
+def validate_task_input(task_name: str, task_description: str) -> None:
+    if not task_name or len(task_name) > 100:
+        raise HTTPException(status_code=400, detail="Invalid task name")
+    if not task_description or len(task_description) > 500:
+        raise HTTPException(status_code=400, detail="Invalid task description")
+
+def validate_file_type(filename: str) -> None:
+    allowed_extensions = {'.csv', '.xlsx', '.json'}
+    file_ext = os.path.splitext(filename)[1].lower()
+    if file_ext not in allowed_extensions:
+        raise HTTPException(status_code=400, detail=f"Unsupported file type: {file_ext}")
 
 def process_data_source(source_data: pd.DataFrame, source_type: str) -> pd.DataFrame:
     """Process data based on source type and return standardized DataFrame"""
@@ -89,6 +127,7 @@ def process_data_source(source_data: pd.DataFrame, source_type: str) -> pd.DataF
 
 def apply_filters(df: pd.DataFrame, filters: dict) -> pd.DataFrame:
     """Apply filters to DataFrame"""
+    print(f"filters: {filters}")
     try:
         filtered_df = df.copy()
         
@@ -129,7 +168,9 @@ def apply_filters(df: pd.DataFrame, filters: dict) -> pd.DataFrame:
         raise HTTPException(status_code=400, detail=f"Error applying filters: {str(e)}")
 
 @app.post("/generate-report")
+@limiter.limit("5/minute")  # Rate limit: 5 requests per minute
 async def generate_report(
+    request: Request,  # Required for rate limiting
     task_name: str = Form(...),
     task_description: str = Form(...),
     sources: List[UploadFile] = File(...),
@@ -138,6 +179,13 @@ async def generate_report(
 ):
     """Generate a report by processing multiple data sources"""
     try:
+        # Validate inputs
+        validate_task_input(task_name, task_description)
+        
+        # Validate file types
+        for source in sources:
+            validate_file_type(source.filename)
+        
         # Parse filters if provided
         filter_dict = json.loads(filters) if filters else {}
         
@@ -189,7 +237,7 @@ async def generate_report(
                         df = pd.DataFrame(json_data)
                     else:
                         df = pd.DataFrame([json_data])
-                else:
+        else:
                     raise HTTPException(status_code=400, detail=f"Unsupported URL format: {url}")
                 
                 processed_df = process_data_source(df, 'url')
@@ -252,9 +300,13 @@ async def generate_report(
         raise HTTPException(status_code=500, detail=f"Error generating report: {str(e)}")
 
 @app.get("/tasks/{task_name}")
-async def get_task(task_name: str):
+@limiter.limit("10/minute")  # Rate limit: 10 requests per minute
+async def get_task(request: Request, task_name: str):
     """Get a specific task by name"""
     try:
+        if not task_name or len(task_name) > 100:
+            raise HTTPException(status_code=400, detail="Invalid task name")
+            
         db = SessionLocal()
         try:
             # Get all sales for this task
@@ -281,7 +333,8 @@ async def get_task(task_name: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/tasks")
-async def get_tasks():
+@limiter.limit("10/minute")  # Rate limit: 10 requests per minute
+async def get_tasks(request: Request):
     """Get all unique task names from the sales table"""
     try:
         db = SessionLocal()
@@ -310,9 +363,13 @@ async def get_tasks():
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/tasks/{task_name}/analytics")
-async def show_analytics(task_name: str):
+@limiter.limit("10/minute")  # Rate limit: 10 requests per minute
+async def show_analytics(request: Request, task_name: str):
     """Get analytics data for a specific task"""
     try:
+        if not task_name or len(task_name) > 100:
+            raise HTTPException(status_code=400, detail="Invalid task name")
+            
         db = SessionLocal()
         try:
             # Get all sales for this task

@@ -432,16 +432,18 @@ h2 {
 .tooltip {
     position: absolute;
     padding: 10px;
-    background: rgba(44, 62, 80, 0.9);
+    background: rgba(44, 62, 80, 0.95);
     color: #fff;
     border-radius: 4px;
     font-size: 14px;
     pointer-events: none;
     opacity: 0;
-    z-index: 1000;
+    z-index: 9999;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     max-width: 300px;
     transition: opacity 0.2s;
+    transform: translate(-50%, -100%);
+    white-space: nowrap;
 }
 
 .tooltip strong {
@@ -458,28 +460,28 @@ h2 {
 
 .chart {
     background: #fff;
-    padding: 10px;
-    border-radius: 4px;
-    min-height: 300px;
+    padding: 20px;
+    border-radius: 8px;
+    min-height: 400px;
     position: relative;
     overflow: visible !important;
 }
 
 .charts-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 15px;
-    margin-top: 10px;
-    position: relative;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin: 20px 0;
+    width: 100%;
     overflow: visible !important;
 }
 
 .analytics-section {
     background: #fff;
-    padding: 15px;
+    padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     position: relative;
     overflow: visible !important;
 }
@@ -525,75 +527,41 @@ h2 {
 /* Responsive design for smaller screens */
 @media (max-width: 1400px) {
     .charts-container {
-        padding: 2rem;
-        gap: 2rem;
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (max-width: 1200px) {
     .charts-container {
         grid-template-columns: 1fr;
-        gap: 2rem;
-        padding: 1.5rem;
     }
     
     .chart {
-        padding: 1.5rem;
-        min-height: 450px;
+        width: 100%;
     }
 }
 
 @media (max-width: 768px) {
     .charts-container {
-        padding: 1rem;
-        margin: 1rem;
+        grid-template-columns: 1fr;
     }
     
     .chart {
-        padding: 1rem;
-        min-height: 400px;
+        width: 100%;
+        min-height: 300px;
     }
 }
 
 .chart-filter {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    padding: 1rem;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border: 1px solid #dee2e6;
-    position: relative;
-    z-index: 2;
+    margin-bottom: 20px;
 }
 
 .chart-filter select {
-    min-width: 150px;
-    font-size: 0.9rem;
-    border: 1px solid #ced4da;
-    background-color: #fff;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    padding: 0.5rem 2rem 0.5rem 1rem;
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
     border-radius: 4px;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-    background-size: 12px;
-    position: relative;
-    z-index: 3;
-}
-
-.chart-filter select:hover {
-    border-color: #adb5bd;
-    background-color: #f8f9fa;
-}
-
-.chart-filter select:focus {
-    border-color: #80bdff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-    outline: none;
+    margin-bottom: 10px;
 }
 
 /* Update chart container to accommodate filters */
@@ -635,6 +603,53 @@ h2 {
 }
 
 #companyTooltip, #monthlyTooltip {
-    position: absolute;
+    position: fixed;
     pointer-events: none;
+    opacity: 0;
+    background: rgba(44, 62, 80, 0.95);
+    color: #fff;
+    padding: 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    transition: opacity 0.2s;
+    transform: translate(-50%, -100%);
+    white-space: nowrap;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+#companyTooltip strong, #monthlyTooltip strong {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #fff;
+}
+
+#companyTooltip br, #monthlyTooltip br {
+    display: block;
+    content: "";
+    margin: 3px 0;
+}
+
+/* Ensure chart containers have proper positioning context */
+#companyChart, #monthlyChart {
+    position: relative;
+    overflow: visible !important;
+}
+
+/* Ensure all parent containers don't clip tooltips */
+.charts-container, .analytics-container, #analyticsContainer {
+    overflow: visible !important;
+}
+
+/* Chart container styles */
+.chart {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    min-height: 400px;
+    position: relative;
+    overflow: visible !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
