@@ -20,8 +20,8 @@ The basic abstractions of the application are as follows:
 - **Source:** A source is the basic building block of the application and it represents an external source from which the data is to be fetched. When the user clicks on Add Source, the user is prompted to upload a file (right now restricted to either JSON/CSV) along with some filters for the data contained in the file.
 - Currently the restrictions allow the creation of tasks when at least two sources are added, but there is no upper limit on the number of sources a user can add.
 
-##![DVisuli drawio](https://github.com/user-attachments/assets/3fc67257-7f50-4452-ba4b-23b2462916bf)
 # Workflow
+![DVisuli drawio](https://github.com/user-attachments/assets/3fc67257-7f50-4452-ba4b-23b2462916bf)
 
 
 
