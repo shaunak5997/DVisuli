@@ -175,7 +175,7 @@ async def generate_report(
     task_description: str = Form(...),
     sources: List[UploadFile] = File(...),
     source_urls: List[str] = Form([]),
-    filters: Optional[str] = Form(None)
+    source_filters: str = Form(None)  # JSON string containing filters for each source
 ):
     """Generate a report by processing multiple data sources"""
     try:
@@ -186,15 +186,15 @@ async def generate_report(
         for source in sources:
             validate_file_type(source.filename)
         
-        # Parse filters if provided
-        filter_dict = json.loads(filters) if filters else {}
+        # Parse source filters if provided
+        source_filters_dict = json.loads(source_filters) if source_filters else {}
         
         # Process file sources
         processed_sources = []
         source_metadata = []
         
         # Process uploaded files
-        for source in sources:
+        for idx, source in enumerate(sources):
             try:
                 content = await source.read()
                 if source.filename.endswith('.csv'):
@@ -209,7 +209,15 @@ async def generate_report(
                         df = pd.DataFrame([json_data])
                 else:
                     raise HTTPException(status_code=400, detail=f"Unsupported file format: {source.filename}")
+                
+                # Process the data source
                 processed_df = process_data_source(df, 'file')
+                
+                # Apply source-specific filters if any
+                current_filters = source_filters_dict.get(str(idx), {})
+                if current_filters:
+                    processed_df = apply_filters(processed_df, current_filters)
+                
                 processed_sources.append(processed_df)
                 source_metadata.append({
                     'name': source.filename,
@@ -222,7 +230,7 @@ async def generate_report(
                 raise HTTPException(status_code=400, detail=f"Error processing source {source.filename}: {str(e)}")
         
         # Process URL sources
-        for url in source_urls:
+        for idx, url in enumerate(source_urls):
             try:
                 response = requests.get(url)
                 response.raise_for_status()
@@ -240,9 +248,15 @@ async def generate_report(
         else:
                     raise HTTPException(status_code=400, detail=f"Unsupported URL format: {url}")
                 
+                # Process the data source
                 processed_df = process_data_source(df, 'url')
-                processed_sources.append(processed_df)
                 
+                # Apply source-specific filters if any
+                current_filters = source_filters_dict.get(str(len(sources) + idx), {})
+                if current_filters:
+                    processed_df = apply_filters(processed_df, current_filters)
+                
+                processed_sources.append(processed_df)
                 source_metadata.append({
                     'name': url,
                     'type': 'url',
@@ -258,10 +272,6 @@ async def generate_report(
             raise HTTPException(status_code=400, detail="No valid data sources provided")
         
         combined_df = pd.concat(processed_sources, ignore_index=True)
-        
-        # Apply filters if any
-        if filter_dict:
-            combined_df = apply_filters(combined_df, filter_dict)
         
         # Create database session
         db = SessionLocal()

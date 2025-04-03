@@ -27,13 +27,11 @@ document.addEventListener('DOMContentLoaded', function() {
         taskHistory.unshift(task); // Add to beginning of array
         updateTaskHistoryUI();
 
-        // Simulate task completion after 2 seconds
+        // Change status to completed after 4 seconds
         setTimeout(() => {
-            // Randomly set status to completed or failed
-            const status = 'completed'
-            task.status = status;
+            task.status = 'completed';
             updateTaskHistoryUI();
-        }, 5000);
+        }, 4000);
     }
 
     function updateTaskHistoryUI() {
@@ -52,17 +50,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${task.status.charAt(0).toUpperCase() + task.status.slice(1)}
                 </div>
                 <div class="task-actions mt-3">
-                    <button class="btn btn-sm btn-primary show-analytics-btn" data-task-id="${task.id}">
-                        <i class="bi bi-graph-up"></i> Show Analytics
-                    </button>
+                    ${task.status === 'completed' ? `
+                        <button class="btn btn-sm btn-primary show-analytics-btn" data-task-id="${task.id}">
+                            <i class="bi bi-graph-up"></i> Show Analytics
+                        </button>
+                    ` : ''}
                 </div>
             `;
 
-            // Add click event listener for the Show Analytics button
-            const analyticsBtn = taskElement.querySelector('.show-analytics-btn');
-            analyticsBtn.addEventListener('click', () => {
-                showTaskAnalytics(task.id);
-            });
+            // Add click event listener for the Show Analytics button only if task is completed
+            if (task.status === 'completed') {
+                const analyticsBtn = taskElement.querySelector('.show-analytics-btn');
+                analyticsBtn.addEventListener('click', () => {
+                    showTaskAnalytics(task.id);
+                });
+            }
 
             taskHistoryList.appendChild(taskElement);
         });
@@ -90,9 +92,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             const data = await response.json();
             
-            // Add existing tasks to history
+            // Add existing tasks to history using unshift instead of push
             data.tasks.forEach(task => {
-                taskHistory.push({
+                taskHistory.unshift({
                     id: task.task_name,
                     name: task.task_name,
                     description: 'Existing task',
@@ -178,9 +180,14 @@ document.addEventListener('DOMContentLoaded', function() {
             <div>
                 <h6 class="mb-1">${sourceName}</h6>
                 <small class="text-muted">Type: ${sourceType}</small>
-                ${filters ? `<small class="d-block text-muted mt-1">
-                    <i class="bi bi-funnel"></i> Filters: ${filters}
-                </small>` : ''}
+                <div class="mt-2">
+                    <label class="form-label">Filters for this source:</label>
+                    <input type="text" class="form-control source-filter-input" 
+                           data-source-id="${sourceId}"
+                           placeholder="Enter filters (e.g., price > 1000, year = 2020)"
+                           value="${filters}">
+                    <small class="text-muted">Separate multiple filters with commas</small>
+                </div>
             </div>
             <div>
                 <button class="btn btn-sm btn-outline-danger delete-source" data-id="${sourceId}">
@@ -210,55 +217,48 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle Generate Report button click
     generateReportBtn.addEventListener('click', async function() {
         try {
-            // Get task details
+            // Disable button and show loading state
+            generateReportBtn.disabled = true;
+            generateReportBtn.innerHTML = '<i class="bi bi-hourglass"></i> Generating...';
+
             const taskName = document.getElementById('task-name').value;
             const taskDescription = document.getElementById('task-description').value;
 
-            if (!taskName) {
-                alert('Please enter a task name');
+            // Validate task name and description
+            if (!taskName || !taskDescription) {
+                alert('Please enter both task name and description.');
                 return;
             }
 
-            if (currentSources.length < 2) {
-                alert('Please add at least two data sources');
-                return;
-            }
-
-            // Add task to history immediately with pending status
-            addTaskToHistory(taskName, taskDescription);
-
-            // Prepare form data
+            // Create FormData object
             const formData = new FormData();
             formData.append('task_name', taskName);
             formData.append('task_description', taskDescription);
 
-            // Add sources from currentSources array
-            const files = [];
-            const urls = [];
-            
-            currentSources.forEach(source => {
-                if (source.data.file) {
-                    files.push(source.data.file);
-                } else if (source.data.url) {
-                    urls.push(source.data.url);
+            // Collect source-specific filters
+            const sourceFilters = {};
+            currentSources.forEach((source, index) => {
+                const filterInput = document.querySelector(`input[data-source-id="${source.id}"]`);
+                if (filterInput && filterInput.value.trim()) {
+                    sourceFilters[index] = parseFilters(filterInput.value.trim());
                 }
             });
 
-            // Add files to form data
-            files.forEach(file => {
-                formData.append('sources', file);
+            console.log(sourceFilters)
+
+            // Add source filters to form data
+            formData.append('source_filters', JSON.stringify(sourceFilters));
+
+            // Add sources to form data
+            currentSources.forEach((source, index) => {
+                if (source.data.file) {
+                    formData.append('sources', source.data.file);
+                } else if (source.data.url) {
+                    formData.append('source_urls', source.data.url);
+                }
             });
 
-            // Add URLs to form data
-            if (urls.length > 0) {
-                formData.append('source_urls', JSON.stringify(urls));
-            }
-
-            // Show loading state
-            generateReportBtn.disabled = true;
-            generateReportBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating Report...';
-
-            // Call the API
+            // Send request to backend
             const response = await fetch('http://localhost:8001/generate-report', {
                 method: 'POST',
                 body: formData
@@ -270,8 +270,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const result = await response.json();
             
+            // Add task to history immediately
+            addTaskToHistory(taskName, taskDescription);
+            
             // Show success message
-            alert('Report generated successfully!');
+           //alert('Report generated successfully!');
             
             // Reset form
             document.getElementById('task-name').value = '';
@@ -279,9 +282,13 @@ document.addEventListener('DOMContentLoaded', function() {
             sourcesList.innerHTML = '';
             currentSources = [];
             isTaskPaneVisible = false;
+            taskPane.style.display = 'none'; // Hide the task pane
             updateGenerateReportButton();
 
             // Reset Add Task button
+            const buttonIcon = addTaskBtn.querySelector('i');
+            buttonIcon.classList.remove('bi-x-circle');
+            buttonIcon.classList.add('bi-plus-circle');
             addTaskBtn.innerHTML = '<i class="bi bi-plus-circle"></i> Add Task';
 
         } catch (error) {
@@ -553,42 +560,116 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isLineChart && !container.querySelector('.chart-filter')) {
             const filterContainer = document.createElement('div');
             filterContainer.className = 'chart-filter';
+            filterContainer.style.marginBottom = '10px';
             
             // Get unique years from original data
             const years = [...new Set(window.originalMonthlyData.map(d => d.month.split('-')[0]))].sort();
             
-            // Create filter HTML
+            // Create filter HTML with multi-select dropdowns
             filterContainer.innerHTML = `
-                <select id="yearFilter" class="form-select">
-                    <option value="all">All Years</option>
-                    ${years.map(year => 
-                        `<option value="${year}">${year}</option>`
-                    ).join('')}
-                </select>
-                <select id="monthFilter" class="form-select">
-                    <option value="all">All Months</option>
-                    ${['January', 'February', 'March', 'April', 'May', 'June',
-                       'July', 'August', 'September', 'October', 'November', 'December'].map((month, index) => 
-                        `<option value="${String(index + 1).padStart(2, '0')}">${month}</option>`
-                    ).join('')}
-                </select>
+                <div class="d-flex gap-2">
+                    <div class="dropdown" style="flex: 1;">
+                        <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" id="yearFilterBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                            Select Years
+                        </button>
+                        <div class="dropdown-menu p-3" style="width: 300px; max-height: 400px; overflow-y: auto;">
+                            <div class="mb-2">
+                                <button id="selectAllYears" class="btn btn-sm btn-outline-primary me-2">Select All</button>
+                                <button id="clearYears" class="btn btn-sm btn-outline-secondary">Clear</button>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <div id="yearCheckboxes">
+                                ${years.map(year => `
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input year-checkbox" type="checkbox" value="${year}" id="year-${year}" checked>
+                                        <label class="form-check-label" for="year-${year}">
+                                            ${year}
+                                        </label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dropdown" style="flex: 1;">
+                        <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" id="monthFilterBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                            Select Months
+                        </button>
+                        <div class="dropdown-menu p-3" style="width: 300px; max-height: 400px; overflow-y: auto;">
+                            <div class="mb-2">
+                                <button id="selectAllMonths" class="btn btn-sm btn-outline-primary me-2">Select All</button>
+                                <button id="clearMonths" class="btn btn-sm btn-outline-secondary">Clear</button>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <div id="monthCheckboxes">
+                                ${['January', 'February', 'March', 'April', 'May', 'June',
+                                   'July', 'August', 'September', 'October', 'November', 'December'].map((month, index) => `
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input month-checkbox" type="checkbox" value="${String(index + 1).padStart(2, '0')}" 
+                                               id="month-${index + 1}" checked>
+                                        <label class="form-check-label" for="month-${index + 1}">
+                                            ${month}
+                                        </label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             `;
             container.insertBefore(filterContainer, container.firstChild);
             
-            // Add event listeners
-            const yearFilter = document.getElementById('yearFilter');
-            const monthFilter = document.getElementById('monthFilter');
+            // Add event listeners for dropdowns
+            ['year', 'month'].forEach(type => {
+                const dropdownMenu = container.querySelector(`#${type}FilterBtn`).nextElementSibling;
+                const checkboxes = container.querySelectorAll(`.${type}-checkbox`);
+                const selectAllBtn = container.querySelector(`#selectAll${type.charAt(0).toUpperCase() + type.slice(1)}s`);
+                const clearBtn = container.querySelector(`#clear${type.charAt(0).toUpperCase() + type.slice(1)}s`);
+                
+                // Prevent dropdown from closing when clicking inside
+                dropdownMenu.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+                
+                // Update chart when any checkbox changes
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', () => {
+                        updateFilterButton(type);
+                        updateMonthlyChart();
+                    });
+                });
+                
+                // Select All button functionality
+                selectAllBtn.addEventListener('click', () => {
+                    checkboxes.forEach(checkbox => checkbox.checked = true);
+                    updateFilterButton(type);
+                    updateMonthlyChart();
+                });
+                
+                // Clear button functionality
+                clearBtn.addEventListener('click', () => {
+                    checkboxes.forEach(checkbox => checkbox.checked = false);
+                    updateFilterButton(type);
+                    updateMonthlyChart();
+                });
+            });
             
-            yearFilter.addEventListener('change', updateMonthlyChart);
-            monthFilter.addEventListener('change', updateMonthlyChart);
+            // Function to update filter button text
+            function updateFilterButton(type) {
+                const checkboxes = document.querySelectorAll(`.${type}-checkbox`);
+                const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+                const buttonText = checkedCount === 0 ? `Select ${type.charAt(0).toUpperCase() + type.slice(1)}s` :
+                                 checkedCount === checkboxes.length ? `All ${type.charAt(0).toUpperCase() + type.slice(1)}s` :
+                                 `${checkedCount} ${type.charAt(0).toUpperCase() + type.slice(1)}s Selected`;
+                document.getElementById(`${type}FilterBtn`).textContent = buttonText;
+            }
         }
         
-        // Update margins to accommodate longer labels
+        // Update margins to accommodate longer labels but reduce top margin
         const margin = { 
-            top: 40, 
+            top: 30,  // Reduced from 40
             right: 30, 
-            bottom: isLineChart ? 60 : 120, // Increase bottom margin for company names
-            left: 80  // Increase left margin for y-axis labels
+            bottom: isLineChart ? 60 : 120,
+            left: 80
         };
         const containerWidth = container.clientWidth;
         const width = containerWidth - margin.left - margin.right;
@@ -642,20 +723,29 @@ document.addEventListener('DOMContentLoaded', function() {
             .attr("dx", "-.8em")
             .attr("dy", ".15em")
             .attr("transform", function(d) {
-                const textLength = this.getComputedTextLength();
-                const maxLength = x.bandwidth() * 1.5;
-                if (textLength > maxLength) {
-                    // If text is too long, rotate it
-                    return `rotate(-45)`;
+                if (isLineChart) {
+                    // For monthly chart, format the date labels
+                    const [year, month] = d.split('-');
+                    const date = new Date(year, parseInt(month) - 1);
+                    const formattedDate = date.toLocaleDateString('en-US', { 
+                        year: '2-digit',
+                        month: 'short'
+                    });
+                    this.textContent = formattedDate;
+                    return "rotate(-45)";
+                } else {
+                    // For company chart
+                    return "rotate(-45)";
                 }
-                return `rotate(-45)`;
             });
 
         // Add Y axis with formatted numbers
         const yAxis = svg.append("g")
             .call(d3.axisLeft(y)
                 .tickFormat(d => {
-                    if (d >= 1000) {
+                    if (d >= 1000000) {
+                        return (d/1000000) + 'M';
+                    } else if (d >= 1000) {
                         return (d/1000) + 'k';
                     }
                     return d;
@@ -666,18 +756,35 @@ document.addEventListener('DOMContentLoaded', function() {
         svg.append("text")
             .attr("class", "axis-title")
             .attr("transform", "rotate(-90)")
-            .attr("y", -margin.left + 20)  // Adjust based on new left margin
+            .attr("y", -margin.left + 20)
             .attr("x", -height / 2)
             .attr("text-anchor", "middle")
+            .style("font-size", "12px")
             .text(isLineChart ? "Average Price ($)" : "Number of Sales");
 
-        // Add X axis label for clarity
+        // Add X axis label with better positioning
         svg.append("text")
             .attr("class", "axis-title")
             .attr("x", width / 2)
-            .attr("y", height + (isLineChart ? 40 : 100))  // Position below rotated labels
+            .attr("y", height + (isLineChart ? 50 : 80))
             .attr("text-anchor", "middle")
+            .style("font-size", "12px")
             .text(isLineChart ? "Month" : "Company");
+
+        // Style the grid lines to be lighter
+        svg.selectAll(".grid line")
+            .style("stroke", "#e0e0e0")
+            .style("stroke-opacity", "0.7");
+        svg.selectAll(".grid path")
+            .style("stroke-width", "0");
+
+        // Style the axis lines
+        svg.selectAll(".domain")
+            .style("stroke", "#666")
+            .style("stroke-width", "1px");
+        svg.selectAll(".tick line")
+            .style("stroke", "#666")
+            .style("stroke-width", "1px");
 
         // Add line for monthly data
         if (isLineChart) {
@@ -782,28 +889,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to update monthly chart based on filters
     function updateMonthlyChart() {
-        const yearFilter = document.getElementById('yearFilter');
-        const monthFilter = document.getElementById('monthFilter');
-        const selectedYear = yearFilter.value;
-        const selectedMonth = monthFilter.value;
+        const yearCheckboxes = document.querySelectorAll('.year-checkbox:checked');
+        const monthCheckboxes = document.querySelectorAll('.month-checkbox:checked');
+        const selectedYears = Array.from(yearCheckboxes).map(cb => cb.value);
+        const selectedMonths = Array.from(monthCheckboxes).map(cb => cb.value);
         
         // Get the original data
         let filteredData = [...window.originalMonthlyData];
         
-        // Apply filters
-        if (selectedYear !== 'all') {
-            filteredData = filteredData.filter(d => d.month.startsWith(selectedYear));
+        // Apply filters if any selections are made
+        if (selectedYears.length > 0) {
+            filteredData = filteredData.filter(d => selectedYears.includes(d.month.split('-')[0]));
         }
         
-        if (selectedMonth !== 'all') {
-            filteredData = filteredData.filter(d => {
-                const monthPart = d.month.split('-')[1];
-                return monthPart === selectedMonth;
-            });
+        if (selectedMonths.length > 0) {
+            filteredData = filteredData.filter(d => selectedMonths.includes(d.month.split('-')[1]));
         }
 
-        // If no data after filtering, show a message
-        if (filteredData.length === 0) {
+        // If no data after filtering or no selections, show a message
+        if (filteredData.length === 0 || (selectedYears.length === 0 && selectedMonths.length === 0)) {
             const container = document.getElementById('monthlyChart');
             const existingSvg = container.querySelector('svg');
             if (existingSvg) {
@@ -818,7 +922,7 @@ document.addEventListener('DOMContentLoaded', function() {
             messageDiv.style.color = '#666';
             messageDiv.innerHTML = `
                 <i class="bi bi-info-circle" style="font-size: 2rem;"></i>
-                <p style="margin-top: 1rem;">No data available for the selected filters</p>
+                <p style="margin-top: 1rem;">Please select at least one year and one month</p>
             `;
             container.appendChild(messageDiv);
             return;
@@ -869,4 +973,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Fetch existing tasks when the page loads
     fetchExistingTasks();
+
+    // Add helper function to parse filters
+    function parseFilters(filterString) {
+        const filters = {};
+        const filterParts = filterString.split(',').map(part => part.trim());
+        
+        filterParts.forEach(filter => {
+            if (filter.includes('price')) {
+                const [min, max] = filter.split('>')[1].split('<').map(Number);
+                filters.priceRange = { min, max };
+            } else if (filter.includes('year')) {
+                const [min, max] = filter.split('>')[1].split('<').map(Number);
+                filters.yearRange = { min, max };
+            } else if (filter.includes('company')) {
+                filters.company = filter.split('=')[1].trim();
+            } else if (filter.includes('model')) {
+                filters.model = filter.split('=')[1].trim();
+            } else if (filter.includes('location')) {
+                filters.location = filter.split('=')[1].trim();
+            }
+        });
+        
+        return filters;
+    }
 }); 
